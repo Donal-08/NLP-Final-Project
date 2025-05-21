@@ -14,15 +14,14 @@
 
 ## Codebase Structure
 
-The codebase is organized within this archive (22-code.zip) as follows:
+The codebase is organized within this folder (22-code) as follows:
 
 ├── 22-code.ipynb  # Main Jupyter Notebook with implementation
 
 ├── experiment_results.csv   
 
 ├── assignment_3_ai_tutors_dataset.json 
-
-└── 22-README.md   
+   
 
 
 In case you don't want to run the time-consuming 36 experiments present in one of the cells inside, the file "experiment_results.csv" contains the results. You can run all the cells below the experimentation cell, which uses loads the results from the file and does the analysis. 
