@@ -9,7 +9,6 @@ This project aims to evaluate the pedagogical effectiveness of AI tutors by buil
 *   Suraj Kumar (AI21BTECH11029)
 
 
-*Project Title:* Pedagogical Ability Assessment of AI Tutors
 
 ## Project Overview
 
