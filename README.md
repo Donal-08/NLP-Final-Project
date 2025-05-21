@@ -1,16 +1,104 @@
 # Pedagogical Ability Assessment of AI Tutors - Group 22
-
+This project aims to evaluate the pedagogical effectiveness of AI tutors by building classification models to analyze tutor responses based on four specific criteria. The project uses the MathDial/Bridge dataset.
 ## Group & Project Information
 
 *Group Number:* 22
-
-*Project Title:* Pedagogical Ability Assessment of AI Tutors
-
 *Team Members:*
 *   Donal Loitam (AI21BTECH11009)
 *   Iragavarapu Sai Pradeep (AI21BTECH11013)
 *   Suraj Kumar (AI21BTECH11029)
 
+
+*Project Title:* Pedagogical Ability Assessment of AI Tutors
+
+## Project Overview
+
+The core task is to classify tutor responses to student mistakes across four pedagogical dimensions:
+1.  **Mistake Identification:** Does the tutor recognize the student's mistake? (Labels: Yes / To some extent / No)
+2.  **Mistake Location:** Does the tutor pinpoint where the mistake is? (Labels: Yes / To some extent / No)
+3.  **Pedagogical Guidance:** Does the tutor offer helpful and correct explanations or hints? (Labels: Yes / To some extent / No)
+4.  **Actionability:** Does the tutor clearly state what the student should do next? (Labels: Yes / To some extent / No)
+
+The models are evaluated using Accuracy and Macro F1 scores, calculated for both exact label matching and a lenient version (grouping "Yes" and "To some extent").
+
+## Dataset
+
+* **Source:** `assignment_3_ai_tutors_dataset.json` (MathDial/Bridge dataset)
+* **Format:** JSON, containing student-tutor dialogues with annotations for the four tasks.
+* **Key Features Used:** `conversation_history`, `response` text, and the annotation labels.
+
+## Methodology
+
+The project explores various configurations of preprocessing, model architectures, task strategies, and loss functions. The primary implementation is within the `NLP_assignment3.ipynb` Jupyter Notebook.
+
+### 1. Data Loading and EDA
+* The `load_data` function parses the JSON dataset into a Pandas DataFrame.
+* Exploratory Data Analysis (EDA) was performed to understand label distributions and text lengths, informing subsequent choices (e.g., `MAX_LENGTH=256`, handling class imbalance).
+
+### 2. Preprocessing
+* **Text Cleaning (`clean_text`):** Includes options for lowercasing, punctuation removal, and stopword removal (using NLTK).
+* **Input Formulation:** Experiments were run with:
+    * Tutor `response` only (`include_history=False`).
+    * `conversation_history` + `[SEP]` + `response` (`include_history=True`).
+* **Tokenization (`TutorResponseDataset`):** Utilizes `AutoTokenizer` from Hugging Face for models like `distilbert-base-uncased`, `bert-base-uncased`, and `roberta-base`. Text is padded/truncated to `MAX_LENGTH=256`.
+* **Data Splitting (`create_dataloaders`):** Data is split into training (80%), validation (10%), and test (10%) sets, with stratification based on the 'Mistake_Identification' label.
+
+### 3. Model Architectures
+* **Base Models:** Pre-trained Transformers from Hugging Face:
+    * `distilbert-base-uncased`
+    * `bert-base-uncased`
+    * `roberta-base`
+* **Task Strategies:**
+    * **Single-Task (`create_single_task_model`):** Four independent `AutoModelForSequenceClassification` models, one for each task.
+    * **Multi-Task (`MultiTaskModel` class):** A single model with a shared base and four separate classification heads.
+
+### 4. Training and Fine-Tuning (`train_and_evaluate`)
+* **Optimizer:** AdamW with a learning rate of `2e-5`.
+* **Loss Functions:**
+    * Standard Cross-Entropy Loss (`nn.CrossEntropyLoss`).
+    * Weighted Cross-Entropy Loss (weights calculated based on class distribution).
+    * Custom `FocalLoss` (gamma=2.0) to address class imbalance.
+* **Training:** Models trained for `EPOCHS=5` with early stopping (`patience=3`) based on average validation lenient F1 score.
+
+## How to Run
+
+1.  **Dependencies:**
+    * Ensure Python 3.x is installed.
+    * Install required libraries:
+        ```bash
+        pip install torch transformers datasets scikit-learn pandas matplotlib seaborn nltk
+        ```
+    * Download NLTK stopwords if not already present (the notebook handles this).
+
+2.  **Dataset:**
+    * Place the `assignment_3_ai_tutors_dataset.json` file in the same directory as the notebook, or update the `DATA_PATH` variable in the notebook.
+
+3.  **Execution:**
+    * Open and run the `NLP_assignment3.ipynb` Jupyter Notebook.
+    * The notebook is structured to:
+        * Set up configurations and constants.
+        * Load and preprocess data.
+        * Perform EDA.
+        * Define model architectures, dataset/dataloader classes, and evaluation/training functions.
+        * Run the experiment loop, iterating through different configurations.
+        * (The notebook currently has placeholders for results analysis and final test set evaluation which would need to be completed based on the experiment outputs).
+
+## Key Findings (Based on Validation Results)
+
+* **Model Choice:** `roberta-base` and `distilbert-base-uncased` showed slightly better and more consistent performance than `bert-base-uncased` in terms of Average Lenient Accuracy.
+* **Task Strategy:** Single-task models consistently outperformed the multi-task approach. This might be due to negative interference between tasks in the multi-task setup.
+* **Input Formulation:** Using only the tutor's `response` (`include_history=False`) yielded better results than including `conversation_history`. This was likely due to severe truncation of long histories with `MAX_LENGTH=256`, leading to loss of crucial context or introduction of noise.
+* **Loss Function:** `FocalLoss` provided the best average performance, effectively handling class imbalance. Weighted Cross Entropy performed the worst, possibly due to over-correction or sensitivity to weight calculation.
+
+*(Refer to the notebook and presentation slides for detailed tables and plots of results.)*
+
+## Future Work
+
+* Conduct more extensive hyperparameter tuning.
+* Perform a deeper error analysis of misclassified examples.
+* Explore more advanced models or ensemble methods.
+* Investigate alternative methods for incorporating conversation history (e.g., hierarchical encoding, increasing `MAX_LENGTH` if compute allows).
+* Run a complete set of multi-task learning experiments if initial runs were limited.
 
 ## Codebase Structure
 
